@@ -70,6 +70,12 @@
   import attack8 from '@/assets/main-attack/attack8.png';
   import attack9 from '@/assets/main-attack/attack9.png';
 
+  // Импорт спрайтов стоячей анимации
+  import stay1 from '@/assets/stay/stay1.png';
+  import stay2 from '@/assets/stay/stay2.png';
+  import stay3 from '@/assets/stay/stay3.png';
+  import stay4 from '@/assets/stay/stay4.png';
+
   // Описание состояния игрока
   interface Player {
     bodyLeft: number;           // X координата тела
@@ -95,6 +101,8 @@
     throwDelay: number;        // Задержка перед броском
     blockCooldown: number;     // Время перезарядки блока
     isRed: boolean;            // Визуальный эффект при атаке
+    lastStayAnimationUpdate: number;
+    currentStayFrame: number;            
   }
 
   // Точка меча
@@ -150,7 +158,11 @@
       attack1, attack2, attack3, attack4, attack5, 
       attack6, attack7, attack8, attack9
     ];
-
+    //спрайты анимации stay
+    readonly STAY_SPRITES = [stay1, stay2, stay3, stay4];
+    readonly STAY_ANIMATION_DURATION = 1050; // 0.9 секунды на полный цикл
+    readonly STAY_ANIMATION_FORWARD_DURATION = 600; // 0.5 секунды на прямую часть
+    
     // Статусы игроков
     players: Player[] = [
       {
@@ -177,6 +189,8 @@
         throwDelay: 0,
         blockCooldown: 0,
         isRed: false,
+        lastStayAnimationUpdate: 0,
+        currentStayFrame: 0,
       },
       {
         bodyLeft: 800, 
@@ -202,6 +216,8 @@
         throwDelay: 0,
         blockCooldown: 0,
         isRed: false,
+        lastStayAnimationUpdate: 0,
+        currentStayFrame: 0,
       }
     ];
 
@@ -455,32 +471,56 @@
       this.updateEnergyBalls();
     }
 
-    // Получение спрайта для персонажа
-    getCharacterSprite(playerIndex: number): string {
-      const player = this.players[playerIndex];
-      
-      if (player.isDead) return `url(${staySprite})`;
-      if (player.isStunned) return `url(${staySprite})`;
-      
-      if (player.isAttacking) {
-        // Вычисляем текущий кадр анимации
-        const frameCount = this.ATTACK_SPRITES.length;
-        const progressFraction = Math.min(player.attackProgress / this.ATTACK_DURATION, 1);
-        const frameIndex = Math.min(
-          Math.floor(progressFraction * frameCount), 
-          frameCount - 1
-        );
-        return `url(${this.ATTACK_SPRITES[frameIndex]})`;
-      }
-      
-      if (player.isUppercutting) return `url(${upperAttackSprite})`;
-      if (player.isBlocking) return `url(${blockSprite})`;
-      if (player.isThrowing) {
-        return player.throwDelay > 0 ? `url(${preThrowSprite})` : `url(${throwSprite})`;
-      }
-      
-      return `url(${staySprite})`;
+
+     // анимации стояния
+     getStayAnimationSprite(playerIndex: number): string {
+  const player = this.players[playerIndex];
+  const now = performance.now();
+  
+  if (now - player.lastStayAnimationUpdate > 50) {
+    const cycleTime = now % this.STAY_ANIMATION_DURATION;
+    const frameCount = this.STAY_SPRITES.length;
+    
+    if (cycleTime < this.STAY_ANIMATION_FORWARD_DURATION) {
+      const progress = cycleTime / this.STAY_ANIMATION_FORWARD_DURATION;
+      player.currentStayFrame = Math.min(Math.floor(progress * frameCount), frameCount - 1);
+    } else {
+      const reverseProgress = (cycleTime - this.STAY_ANIMATION_FORWARD_DURATION) / 
+                            (this.STAY_ANIMATION_DURATION - this.STAY_ANIMATION_FORWARD_DURATION);
+      player.currentStayFrame = frameCount - 2 - Math.floor(reverseProgress * (frameCount - 2));
     }
+    
+    player.currentStayFrame = Math.max(0, Math.min(player.currentStayFrame, frameCount - 1));
+    player.lastStayAnimationUpdate = now;
+  }
+  
+  return `url(${this.STAY_SPRITES[player.currentStayFrame]})`;
+}
+
+    // Получение спрайта для персонажа
+  getCharacterSprite(playerIndex: number): string {
+    const player = this.players[playerIndex];
+    
+    if (player.isDead) return `url(${this.STAY_SPRITES[0]})`;
+    if (player.isStunned) return `url(${this.STAY_SPRITES[0]})`;
+    if (player.isAttacking) {
+      const frameCount = this.ATTACK_SPRITES.length;
+      const progressFraction = Math.min(player.attackProgress / this.ATTACK_DURATION, 1);
+      const frameIndex = Math.min(
+        Math.floor(progressFraction * frameCount), 
+        frameCount - 1
+      );
+      return `url(${this.ATTACK_SPRITES[frameIndex]})`;
+    }
+    if (player.isUppercutting) return `url(${upperAttackSprite})`;
+    if (player.isBlocking) return `url(${blockSprite})`;
+    if (player.isThrowing) {
+      return player.throwDelay > 0 ? `url(${preThrowSprite})` : `url(${throwSprite})`;
+    }
+    
+    // Используем новую анимацию стояния
+    return this.getStayAnimationSprite(playerIndex);
+  }
 
     // Получение ширины персонажа
     getCharacterWidth(playerIndex: number): number {
