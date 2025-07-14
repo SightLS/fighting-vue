@@ -54,11 +54,21 @@
 
   // Импорт спрайтов
   import staySprite from '@/assets/sonya/stay.png';
-  import attackSprite from '@/assets/sonya/attack.png';
   import blockSprite from '@/assets/sonya/block.png';
   import preThrowSprite from '@/assets/sonya/pre-throw.png';
   import throwSprite from '@/assets/sonya/thwrow.png';
   import upperAttackSprite from '@/assets/sonya/upper-attack.png';
+
+    // Импорт спрайтов атаки
+  import attack1 from '@/assets/main-attack/attack1.png';
+  import attack2 from '@/assets/main-attack/attack2.png';
+  import attack3 from '@/assets/main-attack/attack3.png';
+  import attack4 from '@/assets/main-attack/attack4.png';
+  import attack5 from '@/assets/main-attack/attack5.png';
+  import attack6 from '@/assets/main-attack/attack6.png';
+  import attack7 from '@/assets/main-attack/attack7.png';
+  import attack8 from '@/assets/main-attack/attack8.png';
+  import attack9 from '@/assets/main-attack/attack9.png';
 
   // Описание состояния игрока
   interface Player {
@@ -134,6 +144,12 @@
     // Размеры спрайтов
     readonly SPRITE_WIDTH = 80;
     readonly SPRITE_HEIGHT = 120;
+    // cпрайты основной атаки
+
+    readonly ATTACK_SPRITES = [
+      attack1, attack2, attack3, attack4, attack5, 
+      attack6, attack7, attack8, attack9
+    ];
 
     // Статусы игроков
     players: Player[] = [
@@ -445,7 +461,18 @@
       
       if (player.isDead) return `url(${staySprite})`;
       if (player.isStunned) return `url(${staySprite})`;
-      if (player.isAttacking) return `url(${attackSprite})`;
+      
+      if (player.isAttacking) {
+        // Вычисляем текущий кадр анимации
+        const frameCount = this.ATTACK_SPRITES.length;
+        const progressFraction = Math.min(player.attackProgress / this.ATTACK_DURATION, 1);
+        const frameIndex = Math.min(
+          Math.floor(progressFraction * frameCount), 
+          frameCount - 1
+        );
+        return `url(${this.ATTACK_SPRITES[frameIndex]})`;
+      }
+      
       if (player.isUppercutting) return `url(${upperAttackSprite})`;
       if (player.isBlocking) return `url(${blockSprite})`;
       if (player.isThrowing) {

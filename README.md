@@ -1,4 +1,4 @@
-# game-test
+# fighting vue
 
 ## Project setup
 ```
