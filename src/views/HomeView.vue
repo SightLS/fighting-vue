@@ -52,6 +52,9 @@
   <script lang="ts">
   import { Options, Vue } from 'vue-class-component';
 
+  // Бэкграунды
+  import sky from '@/assets/backgrounds/sky.png';
+
   // Импорт спрайтов
   import staySprite from '@/assets/sonya/stay.png';
   import blockSprite from '@/assets/sonya/block.png';
@@ -130,28 +133,28 @@
   @Options({})
   export default class HomeView extends Vue {
     // Константы игры
-    readonly FLOOR_HEIGHT = 210;
+    readonly FLOOR_HEIGHT = 80;
     readonly POINT_LIFETIME = 50;
     readonly POINT_SPACING = 5;
-    readonly BALL_SPEED = 10;
-    readonly BALL_SIZE = 10;
+    readonly BALL_SPEED = 3;
+    readonly BALL_SIZE = 20;
     readonly JUMP_STRENGTH = 90;
     readonly JUMP_DURATION = 500;
-    readonly ATTACK_DURATION = 300;
+    readonly ATTACK_DURATION = 400;
     readonly UPPERCUT_DURATION = 400; // Длительность атаки снизу
-    readonly RED_EFFECT_DURATION = 500;
+    readonly RED_EFFECT_DURATION = 100;
     readonly ATTACK_COOLDOWN = 1000;
     readonly UPPERCUT_COOLDOWN = 1500; // Длинный кулдаун для атаки снизу
     readonly THROW_COOLDOWN = 1000;
-    readonly THROW_DELAY = 300;       // Задержка перед броском
+    readonly THROW_DELAY = 200;       // Задержка перед броском
     readonly ACTION_LOCK_DURATION = 300; // Блокировка действий после броска
     readonly BLOCK_DURATION = 500;
     readonly BLOCK_COOLDOWN = 1000;
     readonly STUN_DURATION = 1000;
 
     // Размеры спрайтов
-    readonly SPRITE_WIDTH = 80;
-    readonly SPRITE_HEIGHT = 120;
+    readonly SPRITE_WIDTH = 160;
+    readonly SPRITE_HEIGHT = 240;
     // cпрайты основной атаки
 
     readonly ATTACK_SPRITES = [
@@ -160,15 +163,15 @@
     ];
     //спрайты анимации stay
     readonly STAY_SPRITES = [stay1, stay2, stay3, stay4];
-    readonly STAY_ANIMATION_DURATION = 1050; // 0.9 секунды на полный цикл
-    readonly STAY_ANIMATION_FORWARD_DURATION = 600; // 0.5 секунды на прямую часть
+    readonly STAY_ANIMATION_DURATION = 1050;
+    readonly STAY_ANIMATION_FORWARD_DURATION = 600;
     
     // Статусы игроков
     players: Player[] = [
       {
-        bodyLeft: 50, 
+        bodyLeft: 200, 
         bodyBottom: this.FLOOR_HEIGHT,
-        movementSpeed: 5, 
+        movementSpeed: 2, 
         facingLeft: false, 
         movementDirection: 0,
         isJumping: false, 
@@ -193,9 +196,9 @@
         currentStayFrame: 0,
       },
       {
-        bodyLeft: 800, 
+        bodyLeft: 600, 
         bodyBottom: this.FLOOR_HEIGHT,
-        movementSpeed: 5, 
+        movementSpeed: 2, 
         facingLeft: true, 
         movementDirection: 0,
         isJumping: false, 
@@ -308,6 +311,7 @@
         player.attackProgress = 0;
         player.attackCooldown = this.ATTACK_COOLDOWN;
         player.isRed = true;
+        console.log(sky) 
         setTimeout(() => (player.isRed = false), this.RED_EFFECT_DURATION);
       }
     }
@@ -363,8 +367,8 @@
       const player = this.players[playerIndex];
       const direction = player.facingLeft ? -1 : 1;
       this.balls.push({
-        x: player.bodyLeft + (direction === -1 ? -10 : 30),
-        y: player.bodyBottom + 50,
+        x: player.bodyLeft + (direction === -1 ? 100 : 100),
+        y: player.bodyBottom + 130,
         playerIndex: playerIndex,
         color: playerIndex === 0 ? 'red' : 'purple',
         visible: true,
@@ -771,7 +775,9 @@
     position: relative;
     width: 1000px;
     height: 600px;
-    background: #eef2f3;
+    background-image: url('../assets/backgrounds/sky.png');
+    background-repeat: no-repeat;
+    background-size: cover;
     border: 3px solid black;
     overflow: hidden;
   }
@@ -782,8 +788,6 @@
     left: 0;
     width: 100%;
     height: 35%;
-    background: yellow;
-    border-top: 3px solid black;
   }
 
   .character {
